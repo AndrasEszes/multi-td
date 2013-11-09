@@ -1,0 +1,15 @@
+extends ../layout
+
+block content
+  .row
+    #contact-map.col-12
+  .row
+    .col-12
+      h3 Contact
+      form(role='form')
+        .form-group
+          .input-group.input-group-sm
+            span.input-group-addon @
+            input.form-control(name='email', type='email', placeholder='E-mail')
+        .form-group
+          textarea.form-control(name='message', rows='5', placeholder='Write your message...')

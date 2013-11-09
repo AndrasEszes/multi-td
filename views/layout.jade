@@ -1,11 +1,37 @@
-doctype 5
 html
   head
     title= title
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+
+    link(rel='stylesheet', href='/stylesheets/reset.min.css')
     link(rel='stylesheet', href='/stylesheets/bootstrap.min.css')
-    link(rel='stylesheet', href='/stylesheets/bootstrap-theme.min.css')
     link(rel='stylesheet', href='/stylesheets/style.css')
+    
     script(src='/javascripts/jquery-2.0.3.min.js')
     script(src='/javascripts/bootstrap.min.js')
+
+    if scripts
+      - each script in scripts
+        script(src=script)
   body
-    block content
+    nav.navbar.navbar-default.navbar-static-top(role='navigation')
+      .container
+        .navbar-header
+          button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-ex1-collapse')
+            span.sr-only Toggle Navigation
+            span.icon-bar
+            span.icon-bar
+            span.icon-bar
+          a.navbar-brand(href="/") Multi TD
+        .collapse.navbar-collapse.navbar-ex1-collapse
+          ul.nav.navbar-nav
+            - var links = [{url:'/', title:'Home'}, {url:'/game/new', title:'New Game'}, {url:'/about', title:'About'}, {url:'/contact', title:'Contact'}]
+            each link in links
+              if (url === link.url)
+                li.active
+                  a(href=link.url)= link.title
+              else
+                li
+                  a(href=link.url)= link.title
+    .container
+      block content
