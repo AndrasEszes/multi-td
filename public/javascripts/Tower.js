@@ -2,55 +2,51 @@ var Tower = function(bf, power, speed, range, cost) {
     this.bf = bf;
 
     this.power = typeof power === 'undefined' ? 1 : power;
-    this.speed = typeof speed === 'undefined' ? 2 : speed;
-    this.range = typeof range === 'undefined' ? 30 : range;
-    this.cost = typeof cost === 'undefined' ? 100 : cost;
+    this.speed = typeof speed === 'undefined' ? 5 : speed;
+    this.range = typeof range === 'undefined' ? 45 : range;
+    this.cost  = typeof cost  === 'undefined' ? 100 : cost;
+    this.size  = 5;
 
-    this.position = {x: 0, y: 0};
-    this.directionVector = {x: 0, y: 0};
+    this.position     = {x: 0, y: 0};
     this.targetVector = {x: 0, y: 0};
+    this.barrelVector = {x: 0, y: 0};
 
     this.shots = [];
 }
 
 Tower.prototype.draw = function(pos) {
     if (typeof pos != 'undefined') {
-        var coords = this.bf.posToCoord(pos);
         this.position = {
-            x: coords.left+(this.bf.gridSize/2),
-            y: coords.top+(this.bf.gridSize/2)
+            x: pos.x,
+            y: pos.y
         }
     }
     
+    this.shiftShots().targetTracking();
+
     this.bf.context.lineWidth = 1;
     this.bf.context.strokeStyle = 'black';
+    // this.bf.context.fillStyle = 'rgba(0,0,0,0.05)';
+
+    // this.bf.context.beginPath();
+    // this.bf.context.arc(this.position.x, this.position.y, this.range, 0, 2*Math.PI);
+    // this.bf.context.fill();
+
+    // this.bf.context.fillStyle = 'black';
 
     this.bf.context.beginPath();
-    this.bf.context.arc(this.position.x,this.position.y, this.bf.gridSize/2, 0, 2*Math.PI);
+    this.bf.context.arc(this.position.x, this.position.y, this.size, 0, 2*Math.PI);
     this.bf.context.stroke();
 
     this.bf.context.beginPath();
-    this.bf.context.moveTo(this.position.x,this.position.y);
-    this.bf.context.lineTo(this.position.x, this.position.y - this.bf.gridSize);
+    this.bf.context.moveTo(this.position.x, this.position.y);
+    this.bf.context.lineTo(this.barrelVector.x, this.barrelVector.y);
     this.bf.context.stroke();
 
     return this;
 }
 
-Tower.prototype.update = function() {
-    this.bf.context.lineWidth = 1;
-    this.bf.context.strokeStyle = 'black';
-
-    this.bf.context.beginPath();
-    this.bf.context.arc(this.position.x,this.position.y, this.bf.gridSize/2, 0, 2*Math.PI);
-    this.bf.context.stroke();
-
-    this.bf.context.beginPath();
-    this.bf.context.moveTo(this.position.x,this.position.y);
-    this.bf.context.lineTo(this.directionVector.x, this.directionVector.y);
-    this.bf.context.stroke();
-
-    // Update shots
+Tower.prototype.shiftShots = function() {
     var tower = this;
     var rad = 0;
     var direction = {};
@@ -61,8 +57,8 @@ Tower.prototype.update = function() {
         
         if (direction.y < 0) rad += Math.PI;
 
-        item.position.x += Math.sin(rad)*10;
-        item.position.y += Math.cos(rad)*10;
+        item.position.x += Math.sin(rad)*7;
+        item.position.y += Math.cos(rad)*7;
 
         if (item.position.y < 0 || item.position.x < 0)
             tower.shots.splice(index, 1); 
@@ -75,43 +71,28 @@ Tower.prototype.update = function() {
     return this;
 }
 
-Tower.prototype.rotate = function(rad) {
-    rad = typeof rad == 'undefined' ? 0 : rad;
-    this.directionVector.x = this.position.x + this.bf.gridSize*Math.sin(rad);
-    this.directionVector.y = this.position.y + this.bf.gridSize*Math.cos(rad);
-    return this;
-}
+Tower.prototype.targetTracking = function(targetPosition) {
+     targetPosition = typeof targetPosition === 'undefined' ? this.targetVector : targetPosition;
+     var direction = {x: targetPosition.x - this.position.x, y: targetPosition.y - this.position.y};
+     var rad = Math.atan(direction.x/direction.y);
 
-Tower.prototype.rotateToPos = function(pos) {
-    this.targetVector = typeof pos == 'undefined' ? this.targetVector : pos;
-    var aVector = {
-        x: 0,
-        y: this.bf.gridSize
-    }
-    var bVector = {
-        x: this.targetVector.x - this.position.x,
-        y: this.targetVector.y - this.position.y
-    }
+     if (direction.y < 0) rad += Math.PI;
 
-    var scalar = aVector.x * bVector.x + aVector.y * bVector.y;
-    var lengthA = Math.sqrt(Math.pow(aVector.x, 2) + Math.pow(aVector.y, 2));
-    var lengthB = Math.sqrt(Math.pow(bVector.x, 2) + Math.pow(bVector.y, 2));
+     this.barrelVector = {
+        x: Math.sin(rad)*this.size*2 + this.position.x, 
+        y: Math.cos(rad)*this.size*2 + this.position.y
+    };
 
-    if (bVector.x < 0) {
-        this.rotate(Math.PI+(Math.PI-Math.acos(scalar/(lengthA*lengthB))));
-    } else {
-        this.rotate(Math.acos(scalar/(lengthA*lengthB)));    
-    }
-
-    return this; 
+     return this;
 }
 
 Tower.prototype.shotToPos = function(pos) {
     var tower = this;
     var bf = this.bf;
+    
     this.shots.push({
-        position: JSON.parse(JSON.stringify(tower.directionVector)),
-        initial : JSON.parse(JSON.stringify(tower.directionVector)),
+        position: JSON.parse(JSON.stringify(tower.barrelVector)),
+        initial : JSON.parse(JSON.stringify(tower.barrelVector)),
         target  : JSON.parse(JSON.stringify(tower.targetVector)),
         draw: function() {
             bf.fillStyle = 'black';
@@ -120,4 +101,6 @@ Tower.prototype.shotToPos = function(pos) {
             bf.context.fill();
         }
     });
+
+    return this;
 }
