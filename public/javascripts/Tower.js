@@ -21,24 +21,15 @@ Tower.prototype.draw = function(pos) {
             y: pos.y
         }
     }
-    
+
     this.shiftShots().targetTracking();
 
+    this.bf.context.beginPath();
     this.bf.context.lineWidth = 1;
     this.bf.context.strokeStyle = 'black';
-    // this.bf.context.fillStyle = 'rgba(0,0,0,0.05)';
 
-    // this.bf.context.beginPath();
-    // this.bf.context.arc(this.position.x, this.position.y, this.range, 0, 2*Math.PI);
-    // this.bf.context.fill();
-
-    // this.bf.context.fillStyle = 'black';
-
-    this.bf.context.beginPath();
     this.bf.context.arc(this.position.x, this.position.y, this.size, 0, 2*Math.PI);
-    this.bf.context.stroke();
 
-    this.bf.context.beginPath();
     this.bf.context.moveTo(this.position.x, this.position.y);
     this.bf.context.lineTo(this.barrelVector.x, this.barrelVector.y);
     this.bf.context.stroke();
@@ -51,20 +42,22 @@ Tower.prototype.shiftShots = function() {
     var rad = 0;
     var direction = {};
 
+    this.bf.context.beginPath();
     this.shots.forEach(function(item, index) {
         direction = {x: item.target.x - item.initial.x, y: item.target.y - item.initial.y};
         rad = Math.atan(direction.x/direction.y);
-        
+
         if (direction.y < 0) rad += Math.PI;
 
-        item.position.x += Math.sin(rad)*7;
-        item.position.y += Math.cos(rad)*7;
+        item.position.x += Math.sin(rad)*7|0;
+        item.position.y += Math.cos(rad)*7|0;
 
         if (item.position.y < 0 || item.position.x < 0)
-            tower.shots.splice(index, 1); 
+            tower.shots.splice(index, 1);
         else
             item.draw();
     });
+    this.bf.context.fill();
 
     if (this.shots.length === 0) this.shots = [];
 
@@ -79,8 +72,8 @@ Tower.prototype.targetTracking = function(targetPosition) {
      if (direction.y < 0) rad += Math.PI;
 
      this.barrelVector = {
-        x: Math.sin(rad)*this.size*2 + this.position.x, 
-        y: Math.cos(rad)*this.size*2 + this.position.y
+        x: (Math.sin(rad)*this.size*2 + this.position.x)|0,
+        y: (Math.cos(rad)*this.size*2 + this.position.y)|0
     };
 
      return this;
@@ -89,16 +82,14 @@ Tower.prototype.targetTracking = function(targetPosition) {
 Tower.prototype.shotToPos = function(pos) {
     var tower = this;
     var bf = this.bf;
-    
+
     this.shots.push({
         position: JSON.parse(JSON.stringify(tower.barrelVector)),
         initial : JSON.parse(JSON.stringify(tower.barrelVector)),
         target  : JSON.parse(JSON.stringify(tower.targetVector)),
         draw: function() {
-            bf.fillStyle = 'black';
-            bf.context.beginPath();
-            bf.context.arc(this.position.x, this.position.y, 1, 0, 2*Math.PI);
-            bf.context.fill();
+            bf.context.moveTo(this.position.x, this.position.y);
+            bf.context.arc(this.position.x, this.position.y, 2, 0, 2*Math.PI);
         }
     });
 
